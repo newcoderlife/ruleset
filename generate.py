@@ -31,7 +31,11 @@ if __name__ == '__main__':
             if len(domain) == 0 or len(ip) == 0:
                 continue
 
-            if reader.country(ip).country.iso_code == 'CN':
+            try:
+                if reader.country(ip).country.iso_code == 'CN':
+                    continue
+            except geoip2.errors.AddressNotFoundError:
+                print('Address not found:', domain, ip)
                 continue
 
             result.append(domain)
