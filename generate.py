@@ -11,7 +11,8 @@ def parse_args():
     parser.add_argument('--geo_database', metavar='GEO_DATABASE', type=str, help='Path to the GeoLite2-Country.mmdb database', default='GeoLite2-Country.mmdb')
     parser.add_argument('--log_file', metavar='LOG_FILE', type=str, help='Path to coredns log file')
     parser.add_argument('--log_format', metavar='LOG_FORMAT', type=str, help='Regex format for coredns log file', default=pattern)
-    parser.add_argument('--result', metavar='RESULT', type=str, help='Path to the existing non-China domain ruleset or new ruleset', default='ruleset.txt')
+    parser.add_argument('--result', metavar='RESULT', type=str, help='Path to the existing non-China domain ruleset or new ruleset', default='ruleset.noncn')
+    parser.add_argument('--exception', metavar='EXCEPTION', type=str, help='Path to the exception ruleset', default='ruleset.cn')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -39,13 +40,36 @@ if __name__ == '__main__':
     try:
         with open(args.result, 'r') as f:
             result.extend(f.readlines())
-            result = list(set(result))
     except FileNotFoundError:
         print('No existing ruleset found, creating new ruleset...')
+
+    exception = []
+    try:
+        with open(args.exception, 'r') as f:
+            exception.extend(f.readlines())
+            exception = [domain.strip() for domain in exception if len(domain.strip()) > 0]
+    except FileNotFoundError:
+        print('No exception ruleset found, skipping...')
+
+    dedup = {}
+    result = [domain.strip() for domain in result if len(domain.strip()) > 0]
+    for subdomain in result:
+        dedup[subdomain] = True
+
+        for domain in exception:
+            if subdomain.endswith(domain):
+                dedup[subdomain] = False
+                break
+        if not dedup[subdomain]:
+            continue
+        
+        for domain in result:
+            if subdomain.endswith(domain) and subdomain != domain:
+                dedup[subdomain] = False
+                break
+
+    result = sorted([domain for domain in dedup if dedup[domain]])
     
     with open(args.result, 'w') as f:
         for domain in result:
-            domain = domain.strip()
-            if len(domain) == 0:
-                continue
             f.write(domain + '\n')
