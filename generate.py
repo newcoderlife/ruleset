@@ -2,6 +2,7 @@
 
 import argparse
 import re
+import os
 import geoip2.database
 
 pattern = r'\[INFO\] A ((?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?\.) \b(?:\d{1,3}\.){3}\d{1,3}:\d+\b \d+.\d+s (\b(?:\d{1,3}\.){3}\d{1,3}\b)'
@@ -11,26 +12,58 @@ def parse_args():
     parser.add_argument('--geo_database', metavar='GEO_DATABASE', type=str, help='Path to the GeoLite2-Country.mmdb database', default='GeoLite2-Country.mmdb')
     parser.add_argument('--log_file', metavar='LOG_FILE', type=str, help='Path to coredns log file')
     parser.add_argument('--log_format', metavar='LOG_FORMAT', type=str, help='Regex format for coredns log file', default=pattern)
-    parser.add_argument('--result', metavar='RESULT', type=str, help='Path to the existing non-China domain ruleset or new ruleset', default='ruleset.noncn')
-    parser.add_argument('--exception', metavar='EXCEPTION', type=str, help='Path to the exception ruleset', default='ruleset.cn')
     return parser.parse_args()
 
-def contains(subdomain: str, domain: str)->bool:
-    s = subdomain.split('.')[::-1]
-    d = domain.split('.')[::-1]
-    if len(d) > len(s):
-        return False
+def contains(subdomain: str, ruleset: list)->str:
+    if ruleset is None:
+        return ''
     
-    for i in range(len(d)):
-        if d[i] != s[i]:
-            return False
+    result = ''
+    for domain in ruleset:
+        s = subdomain.split('.')[::-1]
+        d = domain.split('.')[::-1]
+        if len(d) > len(s):
+            continue
         
-    return True
+        flag = True
+        for i in range(len(d)):
+            if d[i] != s[i]:
+                flag = False
+                break
+        if flag and (result == '' or len(domain) < len(result)):
+            result = domain
+    return result
+
+def read_ruleset(file_path: str)->list:
+    dirname = os.path.dirname(file_path)
+
+    result = []
+    try:
+        with open(file_path, 'r') as f:
+            for line in f:
+                if line.strip() == '' or line.startswith('#'):
+                    continue
+                
+                if line.startswith('include:'):
+                    result.extend(read_ruleset(os.path.join(dirname, line.removeprefix('include:').strip())))
+                else:
+                    result.append(line.strip())
+            print(f'read {file_path}')
+    except FileNotFoundError:
+        print(f'{file_path} not found')
+    except Exception as e:
+        print(f"read {file_path} except {e}")
+    
+    return result
 
 if __name__ == '__main__':
     args = parse_args()
+
+    noncn = read_ruleset('ruleset.noncn')
+    cn = read_ruleset('ruleset.cn')
+    local = read_ruleset('local.noncn')
+
     regex = re.compile(args.log_format)
-    result = []
     reader = geoip2.database.Reader(args.geo_database)
     with open(args.log_file, 'r') as f:
         for line in f:
@@ -50,42 +83,13 @@ if __name__ == '__main__':
                 print('Address not found:', domain, ip)
                 continue
 
-            result.append(domain)
+            local.append(domain)
     reader.close()
+
+    local = sorted(list(set(local)))
+    local = [domain for domain in local if contains(domain, local) == domain and contains(domain, noncn) == '' and contains(domain, cn) == '' and domain != '']
     
-    try:
-        with open(args.result, 'r') as f:
-            result.extend(f.readlines())
-    except FileNotFoundError:
-        print('No existing ruleset found, creating new ruleset...')
-
-    exception = []
-    try:
-        with open(args.exception, 'r') as f:
-            exception.extend(f.readlines())
-            exception = [domain.strip() for domain in exception if len(domain.strip()) > 0]
-    except FileNotFoundError:
-        print('No exception ruleset found, skipping...')
-
-    dedup = {}
-    result = [domain.strip() for domain in result if len(domain.strip()) > 0]
-    for subdomain in result:
-        dedup[subdomain] = True
-
-        for domain in exception:
-            if contains(subdomain, domain):
-                dedup[subdomain] = False
-                break
-        if not dedup[subdomain]:
-            continue
-        
-        for domain in result:
-            if contains(subdomain, domain) and subdomain != domain:
-                dedup[subdomain] = False
-                break
-
-    result = sorted([domain for domain in dedup if dedup[domain]])
-    
-    with open(args.result, 'w') as f:
-        for domain in result:
+    with open('local.noncn', 'w') as f:
+        f.write('# Put your domain here. Format like `twitter.com.`.\n')
+        for domain in local:
             f.write(domain + '\n')
