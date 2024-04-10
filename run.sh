@@ -2,7 +2,25 @@
 
 set -ex
 
-if command -v git &>/dev/null; then
+if [[ $# -lt 1 ]]; then
+    echo "Usage: $0 <path_to_file> [--upload] [--refresh] [--update]"
+    exit 1
+fi
+
+if [ ! -f .env/bin/activate ]; then
+    python3 -m venv .env
+    .env/bin/pip install -r requirements.txt
+fi
+
+.env/bin/python3 ./generate.py --log_file $1
+
+function update {
+    if ! command -v git &>/dev/null; then
+        echo "Git is not installed."
+        return
+    fi
+
+    echo "Cloning latest ruleset..."
     current_branch=$(git rev-parse --abbrev-ref HEAD)
     if [ "$current_branch" != "master" ]; then
         echo "Switching to master branch..."
@@ -10,21 +28,38 @@ if command -v git &>/dev/null; then
     fi
 
     git fetch origin master
-    git stash push -m "ruleset.noncn" ruleset.noncn
     git reset --hard origin/master
-    git stash pop
-fi
+    echo "Ruleset updated."
+}
 
-if [ $# -eq 0 ]; then
-    echo "Usage: $0 <path_to_log_file>"
-    exit 1
-fi
+function refresh {
+    if ! command -v service &>/dev/null; then
+        echo "Service command not found."
+        return
+    fi
 
-if [ ! -f .env/bin/activate ]; then
-    python3 -m venv .env
-fi
+    service coredns restart
+}
 
-source .env/bin/activate
-pip install -r requirements.txt
+function upload {
+    echo "Not implemented yet."
+}
 
-./generate.py --log_file $1
+shift
+for arg in "$@"; do
+    case "$arg" in
+        --upload)
+            upload
+            ;;
+        --refresh)
+            refresh
+            ;;
+        --update)
+            update
+            ;;
+        *)
+            echo "Unknown option: $arg"
+            exit 1
+            ;;
+    esac
+done
