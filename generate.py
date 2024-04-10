@@ -15,6 +15,18 @@ def parse_args():
     parser.add_argument('--exception', metavar='EXCEPTION', type=str, help='Path to the exception ruleset', default='ruleset.cn')
     return parser.parse_args()
 
+def contains(subdomain: str, domain: str)->bool:
+    s = subdomain.split('.')[::-1]
+    d = domain.split('.')[::-1]
+    if len(d) > len(s):
+        return False
+    
+    for i in range(len(d)):
+        if d[i] != s[i]:
+            return False
+        
+    return True
+
 if __name__ == '__main__':
     args = parse_args()
     regex = re.compile(args.log_format)
@@ -61,14 +73,14 @@ if __name__ == '__main__':
         dedup[subdomain] = True
 
         for domain in exception:
-            if subdomain.endswith(domain):
+            if contains(subdomain, domain):
                 dedup[subdomain] = False
                 break
         if not dedup[subdomain]:
             continue
         
         for domain in result:
-            if subdomain.endswith(domain) and subdomain != domain:
+            if contains(subdomain, domain) and subdomain != domain:
                 dedup[subdomain] = False
                 break
 
