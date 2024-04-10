@@ -1,9 +1,6 @@
-jd.com.
-taobao.com.
-qq.com.
-douyin.com.
-bilibili.com.
-baidu.com.
+include:domains/bilibili
+include:domains/douyin
+include:domains/tencent
+
 cn.
-sankuai.com.
-douyincdn.com.
+xn--fiqs8s.
