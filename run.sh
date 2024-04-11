@@ -14,7 +14,7 @@ fi
 
 .env/bin/python3 ./generate.py --log_file $1
 
-function update {
+function update_repo {
     if ! command -v git &>/dev/null; then
         echo "Git is not installed."
         return
@@ -30,6 +30,35 @@ function update {
     git fetch origin master
     git reset --hard origin/master
     echo "Ruleset updated."
+}
+
+function update_database {
+    echo "Downloading latest GeoIP database..."
+    if ! command -v jq &>/dev/null; then
+        echo "jq is not installed."
+        return
+    fi
+    if ! command -v curl &>/dev/null; then
+        echo "curl is not installed."
+        return
+    fi
+
+    name="Country.mmdb.tmp"
+    url=$(curl -sL https://api.github.com/repos/Loyalsoldier/geoip/releases/latest | jq -r '.assets[] | select(.name == "Country.mmdb") | .browser_download_url')
+    status=$(curl -Lo $name $url --write-out "%{http_code}" --silent --output /dev/null)
+    if [[ "$status" -eq 200 && -f "$name" && -s "$name" ]]; then
+        mv $name Country.mmdb
+        echo "Download successful: $name"
+    else
+        echo "Download failed: status=$status"
+    fi
+    rm -f $name
+    echo "GeoIP database updated."
+}
+
+function update {
+    update_repo
+    update_database
 }
 
 function refresh {

@@ -1,8 +1,8 @@
 # Ruleset
 
-Ruleset use with pforward log to generate non-CN domain rulset for pforward.
+Ruleset use with pforward log to generate non-CN domain rulset for CoreDNS.
 
-About [pforward](https://github.com/newcoderlife/pforward).
+About [PForward](https://github.com/newcoderlife/pforward).
 
 ## Usage
 
@@ -15,7 +15,7 @@ cd /etc/coredns/rules/
 
 Add `--refresh` to run `service coredns restart`.
 
-Add `--update` to download latest ruleset.
+Add `--update` to download latest ruleset and database.
 
 Add `--upload` to upload local ruleset to author.
 
