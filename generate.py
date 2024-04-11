@@ -9,7 +9,7 @@ pattern = r'\[INFO\] A ((?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Generate non-China domain ruleset for pforward')
-    parser.add_argument('--geo_database', metavar='GEO_DATABASE', type=str, help='Path to the GeoLite2-Country.mmdb database', default='GeoLite2-Country.mmdb')
+    parser.add_argument('--geo_database', metavar='GEO_DATABASE', type=str, help='Path to the GeoLite2-Country.mmdb database', default='Country.mmdb')
     parser.add_argument('--log_file', metavar='LOG_FILE', type=str, help='Path to coredns log file')
     parser.add_argument('--log_format', metavar='LOG_FORMAT', type=str, help='Regex format for coredns log file', default=pattern)
     return parser.parse_args()
