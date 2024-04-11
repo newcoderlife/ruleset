@@ -9,5 +9,6 @@ include:domains/twitter
 include:domains/aws
 include:domains/microsoft
 include:domains/facebook
+include:domains/azure
 
 include:domains/region
