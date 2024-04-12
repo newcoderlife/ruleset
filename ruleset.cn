@@ -1,6 +1,7 @@
 include:domains/bilibili
 include:domains/douyin
 include:domains/tencent
+include:domains/alibaba
 
 cn.
 xn--fiqs8s.
