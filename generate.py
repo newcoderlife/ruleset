@@ -60,7 +60,7 @@ if __name__ == '__main__':
     args = parse_args()
 
     noncn = read_ruleset('ruleset.noncn')
-    cn = read_ruleset('ruleset.cn')
+    cn = read_ruleset('cn')
     local = read_ruleset('local.noncn')
 
     regex = re.compile(args.log_format)
