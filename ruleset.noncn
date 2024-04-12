@@ -10,5 +10,7 @@ include:domains/aws
 include:domains/microsoft
 include:domains/facebook
 include:domains/azure
+include:domains/fastly
+include:domains/verizon
 
 include:domains/region
