@@ -12,5 +12,7 @@ include:domains/facebook
 include:domains/azure
 include:domains/fastly
 include:domains/verizon
+include:domains/tiktok
+include:domains/imdb
 
 include:domains/region
