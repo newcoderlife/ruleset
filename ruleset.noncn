@@ -14,5 +14,7 @@ include:domains/fastly
 include:domains/verizon
 include:domains/tiktok
 include:domains/imdb
+include:domains/binance
+include:domains/paypal
 
 include:domains/region
