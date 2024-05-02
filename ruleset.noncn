@@ -18,5 +18,6 @@ include:domains/binance
 include:domains/paypal
 include:domains/telegram
 include:domains/pt
+include:domains/mihoyo
 
 include:domains/region
