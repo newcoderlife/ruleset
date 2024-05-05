@@ -5,7 +5,7 @@ import re
 import os
 import geoip2.database
 
-pattern = r'\[INFO\] A ((?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?\.) \b(?:\d{1,3}\.){3}\d{1,3}:\d+\b \d+.\d+s (\b(?:\d{1,3}\.){3}\d{1,3}\b)'
+pattern = r'\[INFO\] A ((?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?\.) \b(?:\d{1,3}\.){3}\d{1,3}:\d+\b( true| false| -)? \d+.\d+s (\b(?:\d{1,3}\.){3}\d{1,3}\b)'
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Generate non-China domain ruleset for pforward')
@@ -68,11 +68,11 @@ if __name__ == '__main__':
     with open(args.log_file, 'r') as f:
         for line in f:
             match = regex.match(line)
-            if match is None or len(match.groups()) != 2:
+            if match is None or len(match.groups()) < 2:
                 continue
 
             domain = match.group(1).strip()
-            ip = match.group(2).strip()
+            ip = match.group(3).strip()
             if len(domain) == 0 or len(ip) == 0:
                 continue
 
