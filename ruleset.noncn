@@ -24,5 +24,6 @@ include:domains/steam
 include:domains/debian
 include:domains/jetbrains
 include:domains/python
+include:domains/intel
 
 include:domains/region

@@ -3,6 +3,8 @@ include:domains/douyin
 include:domains/tencent
 include:domains/alibaba
 include:domains/jd
+include:domains/meituan
+include:domains/iqiyi
 
 cn.
 xn--fiqs8s.
