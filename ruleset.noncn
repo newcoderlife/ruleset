@@ -19,5 +19,10 @@ include:domains/paypal
 include:domains/telegram
 include:domains/pt
 include:domains/mihoyo
+include:domains/porn
+include:domains/steam
+include:domains/debian
+include:domains/jetbrains
+include:domains/python
 
 include:domains/region
