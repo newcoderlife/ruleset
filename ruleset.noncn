@@ -25,5 +25,6 @@ include:domains/debian
 include:domains/jetbrains
 include:domains/python
 include:domains/intel
+include:domains/amazon
 
 include:domains/region
