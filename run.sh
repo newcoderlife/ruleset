@@ -56,12 +56,21 @@ function update_database {
     echo "GeoIP database updated."
 }
 
+function generate_local {
+    if [ ! -f local.noncn ]; then
+        echo "# Put noncn domain here. Like 'twitter.com.'" > local.noncn
+    fi
+}
+
 function update {
     update_repo
     update_database
+    generate_local
 }
 
 function refresh {
+    generate_local
+
     if ! command -v service &>/dev/null; then
         echo "Service command not found."
         return
