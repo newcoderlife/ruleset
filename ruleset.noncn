@@ -26,5 +26,6 @@ include:domains/jetbrains
 include:domains/python
 include:domains/intel
 include:domains/amazon
+include:domains/wikipedia
 
 include:domains/region
