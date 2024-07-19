@@ -9,10 +9,12 @@ fi
 
 if [ ! -f .env/bin/activate ]; then
     python3 -m venv .env
-    .env/bin/pip install -r requirements.txt
 fi
 
-.env/bin/python3 ./generate.py --log_file $1
+source .env/bin/activate
+python3 -m pip install -r requirements.txt -i https://mirrors.volces.com/pypi/simple/
+python3 ./generate.py --log_file $1
+deactivate
 
 function update_repo {
     if ! command -v git &>/dev/null; then
