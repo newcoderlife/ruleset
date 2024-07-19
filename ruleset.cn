@@ -5,6 +5,7 @@ include:domains/alibaba
 include:domains/jd
 include:domains/meituan
 include:domains/iqiyi
+include:domains/feishu
 
 cn.
 xn--fiqs8s.
