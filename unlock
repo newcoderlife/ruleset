@@ -1,0 +1,3 @@
+# Domain that need SNI proxy, including OpenAI, Netflix, etc
+include:domains/openai
+include:domains/netflix
