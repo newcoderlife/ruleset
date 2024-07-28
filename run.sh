@@ -46,7 +46,7 @@ function update_database {
     fi
 
     name="Country.mmdb.tmp"
-    url=$(curl -sL https://api.github.com/repos/Loyalsoldier/geoip/releases/latest | jq -r '.assets[] | select(.name == "Country.mmdb") | .browser_download_url')
+    url="https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb"
     status=$(curl -Lo $name $url --write-out "%{http_code}" --silent --output /dev/null)
     if [[ "$status" -eq 200 && -f "$name" && -s "$name" ]]; then
         mv $name Country.mmdb
