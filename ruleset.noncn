@@ -30,5 +30,7 @@ include:domains/wikipedia
 include:domains/dropbox
 include:domains/docker
 include:domains/reddit
+include:domains/tmdb
+include:domains/letsencrypt
 
 include:domains/region
