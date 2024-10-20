@@ -46,7 +46,7 @@ function update_database {
     fi
 
     name="Country.mmdb.tmp"
-    url="https://gh.newco.workers.dev/https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb"
+    url="https://gh.mirror.newco.homes/https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb"
     status=$(curl -Lo $name $url --write-out "%{http_code}" --silent --output /dev/null)
     if [[ "$status" -eq 200 && -f "$name" && -s "$name" ]]; then
         mv $name Country.mmdb
