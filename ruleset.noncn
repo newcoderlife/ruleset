@@ -34,5 +34,6 @@ include:domains/tmdb
 include:domains/letsencrypt
 include:domains/jfrog
 include:domains/homebrew
+include:domains/mastodon
 
 include:domains/region
