@@ -1,0 +1,33 @@
+name: Update Domains
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "newco"
+          git config --global user.email "newcoderlife@gmail.com"
+
+      - name: Run Makefile
+        run: make generate
+
+      - name: Commit changes
+        run: |
+          DATE=$(date +'%Y%m%d')
+          git add .
+          git commit -m "chore: Update domains $DATE"
+
+      - name: Push changes
+        run: git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
