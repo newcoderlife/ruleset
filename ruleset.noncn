@@ -35,5 +35,6 @@ include:domains/letsencrypt
 include:domains/jfrog
 include:domains/homebrew
 include:domains/mastodon
+include:domains/rsshub
 
 include:domains/region
