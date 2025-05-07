@@ -36,5 +36,6 @@ include:domains/jfrog
 include:domains/homebrew
 include:domains/mastodon
 include:domains/rsshub
+include:domains/spotify
 
 include:domains/region
