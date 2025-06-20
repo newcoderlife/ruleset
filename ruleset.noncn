@@ -38,5 +38,6 @@ include:domains/mastodon
 include:domains/rsshub
 include:domains/spotify
 include:domains/vercel
+include:domains/jellyfin
 
 include:domains/region
