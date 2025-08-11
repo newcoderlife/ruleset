@@ -40,5 +40,6 @@ include:domains/spotify
 include:domains/vercel
 include:domains/jellyfin
 include:domains/nintendo
+include:domains/shadowsocks
 
 include:domains/region
