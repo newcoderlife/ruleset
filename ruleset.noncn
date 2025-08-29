@@ -42,5 +42,6 @@ include:domains/jellyfin
 include:domains/nintendo
 include:domains/shadowsocks
 include:domains/mikrotik
+include:domains/nexitally
 
 include:domains/region
