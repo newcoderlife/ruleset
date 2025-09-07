@@ -42,5 +42,6 @@ include:domains/jellyfin
 include:domains/nintendo
 include:domains/mikrotik
 include:domains/gfw
+include:domains/qbittorrent
 
 include:domains/region
