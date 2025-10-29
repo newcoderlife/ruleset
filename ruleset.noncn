@@ -44,5 +44,6 @@ include:domains/mikrotik
 include:domains/gfw
 include:domains/qbittorrent
 include:domains/hostloc
+include:domains/nodeseek
 
 include:domains/region
