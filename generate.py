@@ -60,10 +60,10 @@ if __name__ == "__main__":
         f.write("/ip/dns/static remove [find where comment=automate]\n")
 
         f.write(
-            "/ip/dns/forwarders add comment=automate doh-servers=https://one.one.one.one/dns-query name=noncn\n"
+            "/ip/dns/forwarders add comment=automate dns-servers=1.1.1.1,8.8.8.8 name=noncn\n"
         )
         f.write(
-            "/ip/dns/forwarders add comment=automate doh-servers=https://dns.alidns.com/dns-query name=cn\n"
+            "/ip/dns/forwarders add comment=automate dns-servers=223.5.5.5,114.114.114.114 name=cn\n"
         )
 
         for domain in noncn:
