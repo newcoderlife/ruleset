@@ -1,9 +1,18 @@
+PYTHON ?= python3
+GENERATED := chndomains.rsc
+
 all: generate
 
 .PHONY: generate
 generate:
-	python3 generate.py
+	$(PYTHON) generate.py
 
-.PHONY: force-push
-force-push:
-	git add . && git commit --amend --no-edit && git push -f
+.PHONY: check
+check:
+	$(PYTHON) -m py_compile generate.py
+	$(PYTHON) generate.py
+	tmp=$$(mktemp); \
+	trap 'rm -f "$$tmp"' EXIT; \
+	cp $(GENERATED) "$$tmp"; \
+	$(PYTHON) generate.py; \
+	cmp "$$tmp" $(GENERATED)

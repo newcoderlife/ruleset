@@ -1,22 +1,43 @@
 # Ruleset
 
-Ruleset use with pforward log to generate non-CN domain rulset for CoreDNS.
+RouterOS DNS forwarder rules for CN and non-CN domains.
 
-About [PForward](https://github.com/newcoderlife/pforward).
+`generate.py` reads the ruleset files and writes `chndomains.rsc`, a RouterOS script
+that creates DNS forwarders and static FWD entries.
 
 ## Usage
 
-Install with PForward automatically.
+Generate the RouterOS script:
 
+```sh
+make generate
 ```
-cd /etc/coredns/rules/
-./run.sh /var/log/coredns.log
+
+Import `chndomains.rsc` on RouterOS after reviewing the DNS upstreams in the
+generated file.
+
+Default upstreams:
+
+- `noncn`: `1.1.1.1,8.8.8.8`
+- `cn`: `223.5.5.5,114.114.114.114`
+
+Override them when generating:
+
+```sh
+python3 generate.py --noncn-dns 1.1.1.1,8.8.8.8 --cn-dns 223.5.5.5,114.114.114.114
 ```
 
-Add `--refresh` to run `service coredns restart`.
+## Rules
 
-Add `--update` to download latest ruleset and database.
+- `ruleset.noncn` and `ruleset.cn` define shared domain groups.
+- `noncn` and `cn` are the top-level inputs used by the generator.
+- `local.noncn` and `local.cn` are optional local overrides and are ignored by git.
+- Domain entries should use the trailing-dot form, for example `twitter.com.`.
 
-Add `--upload` to upload local ruleset to author.
+Run this before committing generated output:
+
+```sh
+make check
+```
 
 All contributions are welcome.
