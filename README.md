@@ -1,43 +1,60 @@
 # Ruleset
 
-RouterOS DNS forwarder rules for CN and non-CN domains.
+RouterOS DNS forwarder rules for routing CN and non-CN domains to different DNS
+upstreams.
 
-`generate.py` reads the ruleset files and writes `chndomains.rsc`, a RouterOS script
-that creates DNS forwarders and static FWD entries.
-
-## Usage
-
-Generate the RouterOS script:
+## Generate
 
 ```sh
 make generate
+make check
 ```
 
-Import `chndomains.rsc` on RouterOS after reviewing the DNS upstreams in the
-generated file.
+The generated RouterOS script is `chndomains.rsc`.
 
 Default upstreams:
 
-- `noncn`: `1.1.1.1,8.8.8.8`
 - `cn`: `223.5.5.5,114.114.114.114`
+- `noncn`: `1.1.1.1,8.8.8.8`
 
-Override them when generating:
+Override upstreams:
 
 ```sh
-python3 generate.py --noncn-dns 1.1.1.1,8.8.8.8 --cn-dns 223.5.5.5,114.114.114.114
+python3 generate.py --cn-dns 223.5.5.5,114.114.114.114 --noncn-dns 1.1.1.1,8.8.8.8
+```
+
+## RouterOS
+
+Create the update script:
+
+```routeros
+/system script add name=ruleset-update source={
+    /tool fetch url="https://raw.githubusercontent.com/newcoderlife/ruleset/master/chndomains.rsc" dst-path=chndomains.rsc mode=https
+    /import file-name=chndomains.rsc
+}
+```
+
+Run once:
+
+```routeros
+/system script run ruleset-update
+```
+
+Update daily at 04:00:
+
+```routeros
+/system scheduler add name=ruleset-update interval=1d start-time=04:00:00 on-event=ruleset-update
+```
+
+Run once after startup:
+
+```routeros
+/system scheduler add name=ruleset-update-startup interval=0s start-time=startup on-event=ruleset-update
 ```
 
 ## Rules
 
-- `ruleset.noncn` and `ruleset.cn` define shared domain groups.
-- `noncn` and `cn` are the top-level inputs used by the generator.
-- `local.noncn` and `local.cn` are optional local overrides and are ignored by git.
-- Domain entries should use the trailing-dot form, for example `twitter.com.`.
-
-Run this before committing generated output:
-
-```sh
-make check
-```
-
-All contributions are welcome.
+- `cn` and `noncn` are the generator inputs.
+- `ruleset.cn` and `ruleset.noncn` contain shared includes.
+- `local.cn` and `local.noncn` are optional local-only overrides.
+- Domain entries use trailing dots, for example `twitter.com.`.
