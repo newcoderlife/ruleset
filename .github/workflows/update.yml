@@ -1,16 +1,23 @@
-name: Update Domains
+name: Ruleset
 
 on:
+  pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,16 +27,5 @@ jobs:
       - name: Run checks
         run: make check
 
-      - name: Commit changes
-        run: |
-          if git diff --quiet -- chndomains.rsc; then
-            echo "No generated changes."
-            exit 0
-          fi
-
-          git config --global user.name "newco"
-          git config --global user.email "newcoderlife@gmail.com"
-          DATE=$(date +'%Y%m%d')
-          git add chndomains.rsc
-          git commit -m "chore: Update domains $DATE"
-          git push
+      - name: Ensure generated rules are committed
+        run: git diff --exit-code -- chndomains.rsc
