@@ -624,6 +624,7 @@
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=workers.dev. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=atom.io. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=dependabot.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=exp-tas.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=ghcr.io. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=git.io. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=github.blog. type=FWD
@@ -639,6 +640,7 @@
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=githubstatus.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=githubuniverse.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=githubusercontent.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=githubcopilot.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=myoctocat.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=opensource.guide. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=repo.new. type=FWD
@@ -682,6 +684,18 @@
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=oaiusercontent.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=openai.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=ai.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=anthropic.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=claude.ai. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=claude.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=claudeusercontent.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=perplexity.ai. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=perplexity.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=pplx.ai. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=cursor.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=cursor.sh. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=cursorapi.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=cursor-cdn.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=openrouter.ai. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=fast.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=netflix.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=netflix.net. type=FWD
@@ -725,6 +739,8 @@
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=twvid.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=vine.co. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=x.com. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=x.ai. type=FWD
+/ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=grok.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=acmvalidations.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=acmvalidationsaws.com. type=FWD
 /ip/dns/static add comment=ruleset forward-to=noncn match-subdomain=yes name=aesworkshops.com. type=FWD

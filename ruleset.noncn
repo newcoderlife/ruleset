@@ -4,6 +4,10 @@ include:domains/cloudflare
 include:domains/github
 include:domains/google
 include:domains/openai
+include:domains/anthropic
+include:domains/perplexity
+include:domains/cursor
+include:domains/openrouter
 include:domains/netflix
 include:domains/twitter
 include:domains/aws
