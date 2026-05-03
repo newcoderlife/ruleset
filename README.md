@@ -60,12 +60,6 @@ python3 generate.py --cn-dns 223.5.5.5,114.114.114.114 --noncn-dns 1.1.1.1,8.8.8
 /system scheduler add name=ruleset-update interval=1d start-time=04:00:00 on-event=ruleset-update
 ```
 
-路由器启动后执行一次：
-
-```routeros
-/system scheduler add name=ruleset-update-startup interval=0s start-time=startup on-event=ruleset-update
-```
-
 ## 规则文件
 
 - `cn`：国内域名入口文件。
