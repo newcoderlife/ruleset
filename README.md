@@ -1,4 +1,4 @@
-# Ruleset
+# chndomains
 
 这个项目用于生成 RouterOS DNS forwarder 规则，把不同域名转发到不同的上游 DNS。
 
@@ -8,7 +8,7 @@
 - 非国内域名走海外 DNS，例如 `1.1.1.1`、`8.8.8.8`
 - 在 RouterOS 上通过 `/ip/dns/static type=FWD` 实现按域名分流
 
-生成后的 RouterOS 脚本是 `chndomains.rsc`。
+生成后的 RouterOS 脚本是 `chndomains.rsc`，发布在 GitHub Releases 的 `latest` 里。
 
 ## 生成规则
 
@@ -33,13 +33,17 @@ make check
 python3 generate.py --cn-dns 223.5.5.5,114.114.114.114 --noncn-dns 1.1.1.1,8.8.8.8
 ```
 
+## 发布产物
+
+`master` 分支更新后，GitHub Actions 会生成 `chndomains.rsc`，并覆盖发布到固定的 `latest` release。也可以在 GitHub Actions 里手动触发发布。
+
 ## 在 RouterOS 上使用
 
 在 RouterOS 里创建更新脚本：
 
 ```routeros
 /system script add name=ruleset-update source={
-    /tool fetch url="https://raw.githubusercontent.com/newcoderlife/ruleset/master/chndomains.rsc" dst-path=chndomains.rsc mode=https
+    /tool fetch url="https://github.com/newcoderlife/chndomains/releases/latest/download/chndomains.rsc" dst-path=chndomains.rsc mode=https
     /import file-name=chndomains.rsc
 }
 ```

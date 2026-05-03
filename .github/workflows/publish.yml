@@ -1,0 +1,75 @@
+name: Publish
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run checks
+        run: make check
+
+  publish:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    needs: check
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate release assets
+        run: make checksum
+
+      - name: Set release date
+        id: release_date
+        run: echo "date=$(TZ=Asia/Hong_Kong date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+
+      - name: Attest release assets
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            chndomains.rsc
+            chndomains.sha256
+
+      - name: Publish latest release assets
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: latest
+          target_commitish: ${{ github.sha }}
+          name: ${{ steps.release_date.outputs.date }}
+          body: |
+            Generated RouterOS DNS forwarder rules.
+
+            Stable download URL:
+            https://github.com/${{ github.repository }}/releases/latest/download/chndomains.rsc
+          files: |
+            chndomains.rsc
+            chndomains.sha256
+          overwrite_files: true
+          make_latest: true
