@@ -12,9 +12,13 @@ generate:
 checksum: generate
 	shasum -a 256 $(GENERATED) > $(CHECKSUM)
 
+.PHONY: lint
+lint:
+	$(PYTHON) lint.py
+
 .PHONY: check
-check:
-	$(PYTHON) -m py_compile generate.py
+check: lint
+	$(PYTHON) -m py_compile generate.py lint.py
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
 	$(PYTHON) generate.py --output "$$tmp/first.rsc"; \
