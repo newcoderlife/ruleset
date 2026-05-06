@@ -16,6 +16,8 @@ include:domains/facebook
 include:domains/azure
 include:domains/fastly
 include:domains/verizon
+include:domains/flickr
+include:domains/yahoo
 include:domains/tiktok
 include:domains/imdb
 include:domains/binance

@@ -10,11 +10,13 @@ DOMAINS_DIR = ROOT / "domains"
 
 OPTIONAL_FILES = {"local.cn", "local.noncn"}
 ENTRY_FILES = ("cn", "noncn", "ruleset.cn", "ruleset.noncn")
+REGISTRY_SECOND_LEVEL_LABELS = {"ac", "co", "com", "edu", "gov", "mil", "net", "org", "sch"}
 
 LABEL_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 
 
 errors = []
+hints = []
 parsed_files = {}
 
 
@@ -33,6 +35,10 @@ def add_error(message):
     errors.append(message)
 
 
+def add_hint(message):
+    hints.append(message)
+
+
 def is_optional(path):
     return path.name in OPTIONAL_FILES
 
@@ -45,7 +51,26 @@ def domain_entries(items):
     return [item for item in items if item[0] == "domain"]
 
 
+def covering_parent(domain, domain_map):
+    """Return the first non-registry parent domain that already covers a domain."""
+    labels = domain.rstrip(".").split(".")
+    for index in range(1, len(labels)):
+        parent = ".".join(labels[index:]) + "."
+        parent_labels = labels[index:]
+        if parent in domain_map and not (
+            len(parent_labels) == 1
+            or (
+                len(parent_labels) == 2
+                and parent_labels[0] in REGISTRY_SECOND_LEVEL_LABELS
+            )
+        ):
+            return parent
+
+    return None
+
+
 def validate_domain(domain, path, line_number):
+    """Validate domain syntax and report all format errors for one entry."""
     if domain != domain.lower():
         add_error(f"{location(path, line_number)}: domain must be lowercase: {domain}")
 
@@ -68,6 +93,7 @@ def validate_domain(domain, path, line_number):
 
 
 def include_target(path, include_text, line_number):
+    """Resolve and validate an include target relative to the including file."""
     target_text = include_text.removeprefix("include:").strip()
 
     if target_text == "":
@@ -99,6 +125,7 @@ def include_target(path, include_text, line_number):
 
 
 def parse_file(path):
+    """Parse one ruleset file into domain/include items while collecting local errors."""
     path = path.resolve()
     cached = parsed_files.get(path)
     if cached is not None:
@@ -155,6 +182,7 @@ def parse_file(path):
 
 
 def expand_file(path, stack=()):
+    """Expand includes recursively while preserving source locations for domains."""
     path = path.resolve()
     if path in stack:
         cycle = " -> ".join(display_path(item) for item in (*stack, path))
@@ -172,6 +200,7 @@ def expand_file(path, stack=()):
 
 
 def check_sorted(path, items):
+    """Require domains in a domain file to be sorted lexicographically."""
     domains = domain_entries(items)
     current_order = [domain for _, domain, _, _ in domains]
     sorted_order = sorted(current_order)
@@ -196,7 +225,64 @@ def check_no_final_newline(path):
         add_error(f"{display_path(path)}: domain file must not end with newline")
 
 
+def check_covered_domains(scope, items):
+    """Report child domains that are redundant under a non-registry parent."""
+    first_entry = {}
+    for _, domain, path, line_number in domain_entries(items):
+        first_entry.setdefault(domain, (path, line_number))
+
+    for _, domain, path, line_number in domain_entries(items):
+        parent = covering_parent(domain, first_entry)
+        if parent is None:
+            continue
+
+        parent_path, parent_line = first_entry[parent]
+        add_error(
+            f"{location(path, line_number)}: redundant domain in {scope}: "
+            f"{domain} is covered by {parent} "
+            f"at {location(parent_path, parent_line)}"
+        )
+
+
+def check_compressible_groups(scope, items):
+    """Hint when several domains share a parent that could be listed instead."""
+    domains = domain_entries(items)
+    domain_names = {domain for _, domain, _, _ in domains}
+    grouped = {}
+
+    for _, domain, _, _ in domains:
+        labels = domain.rstrip(".").split(".")
+        candidate = None
+        for index in range(1, len(labels)):
+            parent = ".".join(labels[index:]) + "."
+            parent_labels = labels[index:]
+            if (
+                parent in domain_names
+                or len(parent_labels) == 1
+                or (
+                    len(parent_labels) == 2
+                    and parent_labels[0] in REGISTRY_SECOND_LEVEL_LABELS
+                )
+            ):
+                continue
+
+            candidate = parent
+
+        if candidate is not None:
+            grouped.setdefault(candidate, set()).add(domain)
+
+    for parent, children in sorted(grouped.items()):
+        if len(children) < 3:
+            continue
+
+        add_hint(
+            f"{scope}: {len(children)} domains are under {parent}; "
+            f"consider listing {parent} if the whole suffix should match"
+        )
+
+
 def check_expanded_duplicates(scope, items):
+    """Report duplicate domains after a ruleset entry file has been expanded."""
     first_entry = {}
 
     for _, domain, path, line_number in domain_entries(items):
@@ -215,6 +301,7 @@ def check_expanded_duplicates(scope, items):
 
 
 def all_linted_files():
+    """Return all files lint should parse and the subset that are domain files."""
     files = [ROOT / name for name in ENTRY_FILES]
     domain_files = []
 
@@ -234,12 +321,15 @@ def all_linted_files():
 
 
 def lint():
+    """Run file-level and expanded-ruleset checks for all configured rules."""
     files, domain_files = all_linted_files()
 
     for path in files:
         items = parse_file(path)
 
         if path.resolve() in domain_files:
+            check_covered_domains(display_path(path), items)
+            check_compressible_groups(display_path(path), items)
             check_no_final_newline(path)
             check_sorted(path, items)
 
@@ -259,7 +349,11 @@ def lint():
 
 
 def main():
+    """Run lint and print accumulated errors."""
     lint()
+
+    for hint in hints:
+        print(f"hint: {hint}", file=sys.stderr)
 
     if not errors:
         return 0

@@ -2,19 +2,16 @@
 
 import argparse
 from pathlib import Path
-from typing import TypeVar
 
 
 DEFAULT_NONCN_DNS = "1.1.1.1,8.8.8.8"
 DEFAULT_CN_DNS = "223.5.5.5,114.114.114.114"
 OPTIONAL_RULESETS = {"local.cn", "local.noncn"}
 RULE_COMMENT = "ruleset"
-T = TypeVar("T")
-DomainRule = tuple[str, str]
-StaticEntry = tuple[str, str, str]
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse CLI options for ruleset inputs, output path, and DNS forwarders."""
     parser = argparse.ArgumentParser(description="Generate RouterOS DNS forwarder rules.")
     parser.add_argument("--noncn-ruleset", default="noncn", help="non-CN ruleset file")
     parser.add_argument("--cn-ruleset", default="cn", help="CN ruleset file")
@@ -42,24 +39,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def dedupe(items: list[T]) -> list[T]:
-    return list(dict.fromkeys(items))
-
-
-def domain_specificity(domain: str) -> int:
-    return len(domain.rstrip(".").split("."))
-
-
-def address_list_name(file_path: str | Path, fallback: str) -> str:
+def read_ruleset(file_path: str | Path, fallback_address_list: str) -> list[tuple[str, str]]:
+    """Expand a ruleset file into domain and address-list pairs."""
     path = Path(file_path)
-    if path.parent.name == "domains":
-        return path.name
-
-    return fallback
-
-
-def read_ruleset(file_path: str | Path, fallback_address_list: str) -> list[DomainRule]:
-    path = Path(file_path)
+    address_list = path.name if path.parent.name == "domains" else fallback_address_list
     result = []
 
     try:
@@ -85,23 +68,18 @@ def read_ruleset(file_path: str | Path, fallback_address_list: str) -> list[Doma
             if not line.endswith("."):
                 raise ValueError(f"{path}:{line_number}: domain must end with '.'")
 
-            result.append((line, address_list_name(path, fallback_address_list)))
+            result.append((line, address_list))
 
-    return dedupe(result)
-
-
-def sort_static_entries(entries: list[StaticEntry]) -> list[StaticEntry]:
-    indexed_entries = list(enumerate(entries))
-    indexed_entries.sort(key=lambda item: (-domain_specificity(item[1][0]), item[0]))
-    return [entry for _, entry in indexed_entries]
+    return list(dict.fromkeys(result))
 
 
 def build_static_entries(
-    noncn: list[DomainRule],
-    cn: list[DomainRule],
+    noncn: list[tuple[str, str]],
+    cn: list[tuple[str, str]],
     noncn_name: str,
     cn_name: str,
-) -> list[StaticEntry]:
+) -> list[tuple[str, str, str]]:
+    """Build de-duplicated RouterOS static DNS entries from both rulesets."""
     entries = [(domain, noncn_name, address_list) for domain, address_list in noncn]
     entries.extend((domain, cn_name, address_list) for domain, address_list in cn)
 
@@ -112,18 +90,19 @@ def build_static_entries(
 
         seen_domains.add(domain)
 
-    return sort_static_entries(entries)
+    return sorted(entries, key=lambda entry: -len(entry[0].rstrip(".").split(".")))
 
 
 def write_routeros_rules(
     output: str | Path,
-    noncn: list[DomainRule],
-    cn: list[DomainRule],
+    noncn: list[tuple[str, str]],
+    cn: list[tuple[str, str]],
     noncn_name: str,
     cn_name: str,
     noncn_dns: str,
     cn_dns: str,
 ) -> None:
+    """Write a complete RouterOS script for forwarders, static DNS rules, and cache flush."""
     entries = build_static_entries(noncn, cn, noncn_name, cn_name)
 
     with Path(output).open("w") as f:

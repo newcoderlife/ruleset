@@ -5,6 +5,9 @@ include:domains/alibaba
 include:domains/jd
 include:domains/meituan
 include:domains/iqiyi
+include:domains/feishu
+include:domains/steam-content
+include:domains/steam-cn
 
 cn.
 xn--fiqs8s.
