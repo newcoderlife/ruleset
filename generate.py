@@ -39,9 +39,18 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def read_ruleset(file_path: str | Path, fallback_address_list: str) -> list[tuple[str, str]]:
+def read_ruleset(
+    file_path: str | Path,
+    fallback_address_list: str,
+    stack: tuple[Path, ...] = (),
+) -> list[tuple[str, str]]:
     """Expand a ruleset file into domain and address-list pairs."""
     path = Path(file_path)
+    resolved_path = path.resolve()
+    if resolved_path in stack:
+        cycle = " -> ".join(str(item) for item in (*stack, resolved_path))
+        raise ValueError(f"include cycle: {cycle}")
+
     address_list = path.name if path.parent.name == "domains" else fallback_address_list
     result = []
 
@@ -63,7 +72,9 @@ def read_ruleset(file_path: str | Path, fallback_address_list: str) -> list[tupl
                 raise ValueError(f"{path}:{line_number}: empty include")
 
             include_path = path.parent / include_target
-            result.extend(read_ruleset(include_path, fallback_address_list))
+            result.extend(
+                read_ruleset(include_path, fallback_address_list, (*stack, resolved_path))
+            )
         else:
             if not line.endswith("."):
                 raise ValueError(f"{path}:{line_number}: domain must end with '.'")

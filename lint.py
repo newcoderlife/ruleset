@@ -13,6 +13,7 @@ ENTRY_FILES = ("cn", "noncn", "ruleset.cn", "ruleset.noncn")
 REGISTRY_SECOND_LEVEL_LABELS = {"ac", "co", "com", "edu", "gov", "mil", "net", "org", "sch"}
 
 LABEL_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
+ADDRESS_LIST_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
 
 
 errors = []
@@ -225,6 +226,11 @@ def check_no_final_newline(path):
         add_error(f"{display_path(path)}: domain file must not end with newline")
 
 
+def check_address_list_name(path):
+    if ADDRESS_LIST_PATTERN.fullmatch(path.name) is None:
+        add_error(f"{display_path(path)}: unsafe RouterOS address-list name: {path.name}")
+
+
 def check_covered_domains(scope, items):
     """Report child domains that are redundant under a non-registry parent."""
     first_entry = {}
@@ -300,6 +306,34 @@ def check_expanded_duplicates(scope, items):
     return first_entry
 
 
+def reachable_domain_files(path, stack=()):
+    """Return domain files reachable through include statements from one entry file."""
+    path = path.resolve()
+    if path in stack:
+        return set()
+
+    result = set()
+    for kind, value, _, _ in parse_file(path):
+        if kind != "include":
+            continue
+
+        if value.parent == DOMAINS_DIR:
+            result.add(value)
+
+        result.update(reachable_domain_files(value, (*stack, path)))
+
+    return result
+
+
+def check_domain_files_reachable(domain_files):
+    """Report domain files that are linted but not included by cn or noncn."""
+    reachable = reachable_domain_files(ROOT / "cn")
+    reachable.update(reachable_domain_files(ROOT / "noncn"))
+
+    for path in sorted(domain_files - reachable):
+        add_error(f"{display_path(path)}: domain file is not included by cn or noncn")
+
+
 def all_linted_files():
     """Return all files lint should parse and the subset that are domain files."""
     files = [ROOT / name for name in ENTRY_FILES]
@@ -328,10 +362,13 @@ def lint():
         items = parse_file(path)
 
         if path.resolve() in domain_files:
+            check_address_list_name(path)
             check_covered_domains(display_path(path), items)
             check_compressible_groups(display_path(path), items)
             check_no_final_newline(path)
             check_sorted(path, items)
+
+    check_domain_files_reachable(domain_files)
 
     cn_items = expand_file(ROOT / "cn")
     noncn_items = expand_file(ROOT / "noncn")
