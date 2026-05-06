@@ -41,11 +41,6 @@ def is_inside_repo(path):
     return path == ROOT or ROOT in path.parents
 
 
-def parent_domains(domain):
-    labels = domain.rstrip(".").split(".")
-    return [".".join(labels[index:]) + "." for index in range(1, len(labels))]
-
-
 def domain_entries(items):
     return [item for item in items if item[0] == "domain"]
 
@@ -196,24 +191,9 @@ def check_sorted(path, items):
     add_error(f"{display_path(path)}: domains must be sorted")
 
 
-def check_covered_domains(scope, items):
-    first_entry = {}
-    for _, domain, path, line_number in domain_entries(items):
-        first_entry.setdefault(domain, (path, line_number))
-
-    for _, domain, path, line_number in domain_entries(items):
-        for parent in parent_domains(domain):
-            parent_entry = first_entry.get(parent)
-            if parent_entry is None:
-                continue
-
-            parent_path, parent_line = parent_entry
-            add_error(
-                f"{location(path, line_number)}: redundant domain in {scope}: "
-                f"{domain} is covered by {parent} "
-                f"at {location(parent_path, parent_line)}"
-            )
-            break
+def check_no_final_newline(path):
+    if path.read_text().endswith("\n"):
+        add_error(f"{display_path(path)}: domain file must not end with newline")
 
 
 def check_expanded_duplicates(scope, items):
@@ -258,15 +238,14 @@ def lint():
 
     for path in files:
         items = parse_file(path)
-        check_covered_domains(display_path(path), items)
 
         if path.resolve() in domain_files:
+            check_no_final_newline(path)
             check_sorted(path, items)
 
     cn_items = expand_file(ROOT / "cn")
     noncn_items = expand_file(ROOT / "noncn")
 
-    check_covered_domains("cn ruleset", cn_items)
     cn_domains = check_expanded_duplicates("cn ruleset", cn_items)
     noncn_domains = check_expanded_duplicates("noncn ruleset", noncn_items)
 

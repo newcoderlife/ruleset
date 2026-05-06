@@ -10,6 +10,8 @@ DEFAULT_CN_DNS = "223.5.5.5,114.114.114.114"
 OPTIONAL_RULESETS = {"local.cn", "local.noncn"}
 RULE_COMMENT = "ruleset"
 T = TypeVar("T")
+DomainRule = tuple[str, str]
+StaticEntry = tuple[str, str, str]
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,12 +50,15 @@ def domain_specificity(domain: str) -> int:
     return len(domain.rstrip(".").split("."))
 
 
-def parent_domains(domain: str) -> list[str]:
-    labels = domain.rstrip(".").split(".")
-    return [".".join(labels[index:]) + "." for index in range(1, len(labels))]
+def address_list_name(file_path: str | Path, fallback: str) -> str:
+    path = Path(file_path)
+    if path.parent.name == "domains":
+        return path.name
+
+    return fallback
 
 
-def read_ruleset(file_path: str | Path) -> list[str]:
+def read_ruleset(file_path: str | Path, fallback_address_list: str) -> list[DomainRule]:
     path = Path(file_path)
     result = []
 
@@ -75,62 +80,45 @@ def read_ruleset(file_path: str | Path) -> list[str]:
                 raise ValueError(f"{path}:{line_number}: empty include")
 
             include_path = path.parent / include_target
-            result.extend(read_ruleset(include_path))
+            result.extend(read_ruleset(include_path, fallback_address_list))
         else:
             if not line.endswith("."):
                 raise ValueError(f"{path}:{line_number}: domain must end with '.'")
 
-            result.append(line)
+            result.append((line, address_list_name(path, fallback_address_list)))
 
     return dedupe(result)
 
 
-def prune_covered_domains(domains: list[str]) -> list[str]:
-    domains = dedupe(domains)
-    domain_set = set(domains)
-    result = []
-
-    for domain in domains:
-        if any(parent in domain_set for parent in parent_domains(domain)):
-            continue
-
-        result.append(domain)
-
-    return result
-
-
-def sort_group_domains(domains: list[str]) -> list[str]:
-    indexed_domains = list(enumerate(prune_covered_domains(domains)))
-    indexed_domains.sort(key=lambda item: (domain_specificity(item[1]), item[0]))
-    return [domain for _, domain in indexed_domains]
+def sort_static_entries(entries: list[StaticEntry]) -> list[StaticEntry]:
+    indexed_entries = list(enumerate(entries))
+    indexed_entries.sort(key=lambda item: (-domain_specificity(item[1][0]), item[0]))
+    return [entry for _, entry in indexed_entries]
 
 
 def build_static_entries(
-    noncn: list[str],
-    cn: list[str],
+    noncn: list[DomainRule],
+    cn: list[DomainRule],
     noncn_name: str,
     cn_name: str,
-) -> list[tuple[str, str]]:
-    entries = [(domain, noncn_name) for domain in noncn]
-    entries.extend((domain, cn_name) for domain in cn)
+) -> list[StaticEntry]:
+    entries = [(domain, noncn_name, address_list) for domain, address_list in noncn]
+    entries.extend((domain, cn_name, address_list) for domain, address_list in cn)
 
-    forward_by_domain = {}
-    for domain, forward_to in entries:
-        existing = forward_by_domain.get(domain)
-        if existing is not None and existing != forward_to:
-            raise ValueError(f"{domain} is assigned to both {existing} and {forward_to}")
+    seen_domains = set()
+    for domain, _, _ in entries:
+        if domain in seen_domains:
+            raise ValueError(f"{domain} is assigned more than once")
 
-        forward_by_domain[domain] = forward_to
+        seen_domains.add(domain)
 
-    result = [(domain, cn_name) for domain in sort_group_domains(cn)]
-    result.extend((domain, noncn_name) for domain in sort_group_domains(noncn))
-    return result
+    return sort_static_entries(entries)
 
 
 def write_routeros_rules(
     output: str | Path,
-    noncn: list[str],
-    cn: list[str],
+    noncn: list[DomainRule],
+    cn: list[DomainRule],
     noncn_name: str,
     cn_name: str,
     noncn_dns: str,
@@ -149,9 +137,10 @@ def write_routeros_rules(
             f"/ip/dns/forwarders add comment={RULE_COMMENT} dns-servers={cn_dns} name={cn_name}\n"
         )
 
-        for domain, forward_to in entries:
+        for domain, forward_to, address_list in entries:
             f.write(
-                f"/ip/dns/static add comment={RULE_COMMENT} forward-to={forward_to} match-subdomain=yes name={domain} type=FWD\n"
+                f"/ip/dns/static add address-list={address_list} comment={RULE_COMMENT} "
+                f"forward-to={forward_to} match-subdomain=yes name={domain} type=FWD\n"
             )
 
         f.write("/ip/dns/cache flush\n")
@@ -161,8 +150,8 @@ if __name__ == "__main__":
     args = parse_args()
     write_routeros_rules(
         output=args.output,
-        noncn=read_ruleset(args.noncn_ruleset),
-        cn=read_ruleset(args.cn_ruleset),
+        noncn=read_ruleset(args.noncn_ruleset, args.noncn_name),
+        cn=read_ruleset(args.cn_ruleset, args.cn_name),
         noncn_name=args.noncn_name,
         cn_name=args.cn_name,
         noncn_dns=args.noncn_dns,

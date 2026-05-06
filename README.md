@@ -7,6 +7,7 @@
 - 国内域名走国内 DNS，例如 `223.5.5.5`、`114.114.114.114`
 - 非国内域名走海外 DNS，例如 `1.1.1.1`、`8.8.8.8`
 - 在 RouterOS 上通过 `/ip/dns/static type=FWD` 实现按域名分流
+- 命中规则解析出的地址会动态加入 RouterOS firewall address-list
 
 生成后的 RouterOS 脚本是 `chndomains.rsc`，发布在 GitHub Releases 的 `latest` 里。
 
@@ -27,10 +28,22 @@ make check
 - `cn`: `223.5.5.5,114.114.114.114`
 - `noncn`: `1.1.1.1,8.8.8.8`
 
+address-list 会按域名来源文件生成：
+
+- `domains/github` 里的域名使用 `address-list=github`
+- `domains/region` 里的域名使用 `address-list=region`
+- `local.cn` 和 `local.noncn` 里的域名分别使用 `address-list=cn` 和 `address-list=noncn`
+
 如果要自定义上游 DNS：
 
 ```sh
 python3 generate.py --cn-dns 223.5.5.5,114.114.114.114 --noncn-dns 1.1.1.1,8.8.8.8
+```
+
+RouterOS 会在静态 DNS 规则命中时，把返回地址动态加入对应 firewall address-list；条目会按 DNS TTL 过期。如果需要延长保留时间，可以在 RouterOS 上自行设置：
+
+```routeros
+/ip/dns/set address-list-extra-time=1h
 ```
 
 ## 发布产物
