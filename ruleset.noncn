@@ -23,6 +23,7 @@ include:domains/imdb
 include:domains/binance
 include:domains/paypal
 include:domains/ibkr
+include:domains/hsbc
 include:domains/telegram
 include:domains/pt
 include:domains/mihoyo

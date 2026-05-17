@@ -6,6 +6,7 @@ include:domains/jd
 include:domains/meituan
 include:domains/iqiyi
 include:domains/feishu
+include:domains/hsbc-cn
 include:domains/steam-content
 include:domains/steam-cn
 
