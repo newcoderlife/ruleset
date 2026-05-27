@@ -49,6 +49,7 @@ include:domains/vercel
 include:domains/jellyfin
 include:domains/nintendo
 include:domains/mikrotik
+include:domains/3d-printing
 include:domains/gfw
 include:domains/qbittorrent
 include:domains/hostloc
